@@ -1,0 +1,15 @@
+Package: cubebaby-editor
+Version: @VERSION@
+Section: sound
+Priority: optional
+Architecture: all
+Installed-Size: @SIZE@
+Depends: python3 (>= 3.10), python3-pyqt6, python3-rtmidi, python3-numpy, python3-scipy, libxcb-cursor0
+Recommends: libqt6svg6
+Maintainer: Walbert Freitas <217115970+walbertfreitas@users.noreply.github.com>
+Description: Editor nativo para o pedal Cube Baby AC (Cuvave/M-VAVE)
+ Edita os presets A/B/C, importa IRs a partir de arquivos WAV (com conversão
+ para 48 kHz e otimização de fase mínima), faz backup e restauração dos IRs e
+ controla o USB Loopback do Cube Baby AC, sem precisar do CubeSuite no Wine.
+ .
+ Projeto independente de interoperabilidade; não é afiliado à Cuvave/M-VAVE.

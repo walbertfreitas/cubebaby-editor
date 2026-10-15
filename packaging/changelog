@@ -1,0 +1,21 @@
+cubebaby-editor (0.1.2) unstable; urgency=low
+
+  * Backup automático na primeira conexão: salva os 8 IRs e os 3 presets
+    que estavam no pedal em ~/.local/share/cubebaby-editor/backups.
+
+ -- Walbert Freitas <217115970+walbertfreitas@users.noreply.github.com>  Thu, 15 Oct 2026 13:00:00 -0300
+
+cubebaby-editor (0.1.1) unstable; urgency=low
+
+  * IRs de fábrica: o BCIF.bin passa a ficar na pasta do app
+    (~/.local/share/cubebaby-editor/factory); a pasta do CubeSuite não é mais necessária.
+
+ -- Walbert Freitas <217115970+walbertfreitas@users.noreply.github.com>  Thu, 15 Oct 2026 12:00:00 -0300
+
+cubebaby-editor (0.1.0) unstable; urgency=low
+
+  * Primeira versão: presets A/B/C (leitura, edição ao vivo, salvar, fábrica),
+    USB Loopback, importação de IR (WAV 16/24/32 bits, conversão para 48 kHz,
+    fase mínima), backup/restauração de IRs (completo e por slot), IRs de fábrica.
+
+ -- Walbert Freitas <217115970+walbertfreitas@users.noreply.github.com>  Thu, 15 Oct 2026 00:00:00 -0300

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Cube Baby Editor
+Comment=Editor de presets e IRs do pedal Cube Baby AC
+Exec=cubebaby-editor
+Icon=cubebaby-editor
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=cube;baby;cuvave;mvave;ir;preset;guitar;violão;
+StartupWMClass=cubebaby-editor

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write  # para anexar o .deb às releases
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar dependências do sistema (as mesmas do .deb)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pyqt6 python3-rtmidi python3-numpy python3-scipy
+
+      - name: Testes
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Verificar que a interface importa com PyQt6
+        run: QT_QPA_PLATFORM=offscreen python3 -c "import cubebaby.gui; print('ok')"
+
+      - name: Gerar o .deb
+        run: packaging/build-deb.sh
+
+      - name: Conferir que a versão da tag bate com VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "v$(cat VERSION)" = "${GITHUB_REF_NAME}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cubebaby-editor-deb
+          path: dist/*.deb
+
+      - name: Publicar na Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.deb
