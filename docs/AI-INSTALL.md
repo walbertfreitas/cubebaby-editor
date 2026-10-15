@@ -133,7 +133,8 @@ If `amidi` is missing: `sudo apt install alsa-utils` (Debian family).
 Ask the user to open **Cube Baby Editor** from the applications menu (or run `cubebaby-editor`).
 Tell them what to expect:
 
-- The bottom bar shows `Conectado: Cube Baby AC (chip 0x4FCE)` (the UI is in Portuguese).
+- The bottom bar shows `Connected: Cube Baby AC (chip 0x4FCE)` (or `Conectado: …` in Portuguese).
+  The UI language follows the system and can be changed at the bottom right (English/Português).
 - On the very first connection the app backs up the pedal's 8 IRs and 3 presets (~15 s, progress bar)
   and shows a message with the backup folder `~/.local/share/cubebaby-editor/backups/`.
 

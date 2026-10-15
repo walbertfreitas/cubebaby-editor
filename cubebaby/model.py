@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from . import ir
 from . import protocol as p
 from .device import CubeBaby, DeviceError
+from .i18n import T
 
 PRESET_BANK = 5
 PRESET_SIZE = 16
@@ -64,7 +65,7 @@ class CubeBabyAC:
     def __init__(self, dev: CubeBaby):
         self.dev = dev
         if dev.chip_id != 0x4FCE:
-            raise DeviceError(f"Modelo não suportado (id 0x{dev.chip_id:04X}); este app é para o Cube Baby AC.")
+            raise DeviceError(T("Modelo não suportado (id 0x{chip:04X}); este app é para o Cube Baby AC.", chip=dev.chip_id))
         self.ir_base = dev.ir_base
         self.ir_end = self.ir_base + ir.SLOT_COUNT * ir.SLOT_SIZE
 
@@ -126,20 +127,20 @@ class CubeBabyAC:
     def _check_flash_range(self, addr: int, length: int) -> None:
         # Trava de segurança: o banco 0 também guarda o firmware. Só a área de IRs pode ser apagada/gravada.
         if not (self.ir_base <= addr and addr + length <= self.ir_end):
-            raise DeviceError(f"Bloqueado: 0x{addr:X}+{length} fora da área de IRs.")
+            raise DeviceError(T("Bloqueado: 0x{addr:X}+{length} fora da área de IRs.", addr=addr, length=length))
 
     def _erase(self, addr: int) -> None:
         self._check_flash_range(addr, SECTOR)
         if addr % SECTOR:
-            raise DeviceError("Endereço de apagamento não alinhado ao setor")
+            raise DeviceError(T("Endereço de apagamento não alinhado ao setor"))
         fr = self.dev.transact(p.build_frame(p.CMD_ERASE, bytes([FLASH_BANK]) + addr.to_bytes(4, "little")),
                                p.CMD_ACK, timeout=30.0)
         if fr.data[:1] != b"\x00":
-            raise DeviceError(f"Falha ao apagar setor 0x{addr:X}")
+            raise DeviceError(T("Falha ao apagar setor 0x{addr:X}", addr=addr))
 
     def _write_verified(self, bank: int, addr: int, data: bytes) -> None:
         if bank == FLASH_BANK and addr != LOOPBACK_ADDR:
             self._check_flash_range(addr, len(data))
         self.dev.write(bank, addr, data)
         if self.dev.read(bank, addr, len(data)) != data:
-            raise DeviceError("A verificação falhou: o que foi lido do pedal difere do que foi gravado.")
+            raise DeviceError(T("A verificação falhou: o que foi lido do pedal difere do que foi gravado."))

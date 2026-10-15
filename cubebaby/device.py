@@ -8,12 +8,17 @@ import time
 import rtmidi
 
 from . import protocol as p
+from .i18n import T
 
 PORT_HINT = "USB2.0 Device"
 
 
 class DeviceError(Exception):
     pass
+
+
+class NoResponse(DeviceError):
+    """O pedal não respondeu: normalmente cabo desconectado ou outro programa usando a porta."""
 
 
 def find_port(midi: rtmidi.MidiIn | rtmidi.MidiOut, hint: str = PORT_HINT) -> int | None:
@@ -32,7 +37,7 @@ class CubeBaby:
         self._in.ignore_types(sysex=False)
         oi, ii = find_port(self._out, hint), find_port(self._in, hint)
         if oi is None or ii is None:
-            raise DeviceError("Pedal não encontrado. Ele está conectado no USB?")
+            raise DeviceError(T("Pedal não encontrado. Ele está conectado no USB?"))
         self._out.open_port(oi)
         self._in.open_port(ii)
         self._rx: queue.Queue[p.Frame] = queue.Queue()
@@ -75,7 +80,7 @@ class CubeBaby:
                     break
                 if frame.cmd == expect_cmd:
                     return frame
-            raise DeviceError(f"Sem resposta do pedal (comando {expect_cmd:02X})")
+            raise NoResponse(T("Sem resposta do pedal (comando {cmd:02X})", cmd=expect_cmd))
 
     # --- comandos ---------------------------------------------------------
 
@@ -92,7 +97,7 @@ class CubeBaby:
             fr = self.transact(p.read_frame(bank, addr, n), p.CMD_READ)
             hdr, payload = fr.data[:8], fr.data[8:]
             if hdr != p.mem_header(bank, addr, n) or len(payload) != n:
-                raise DeviceError("Resposta de leitura inesperada")
+                raise DeviceError(T("Resposta de leitura inesperada"))
             out += payload
             addr += n
             length -= n
@@ -103,4 +108,4 @@ class CubeBaby:
             chunk = data[off:off + self.block]
             fr = self.transact(p.write_frame(bank, addr + off, chunk), p.CMD_ACK)
             if fr.data[:1] != b"\x00":
-                raise DeviceError(f"Pedal recusou a gravação (status {fr.data.hex()})")
+                raise DeviceError(T("Pedal recusou a gravação (status {status})", status=fr.data.hex()))

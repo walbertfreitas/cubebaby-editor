@@ -21,6 +21,8 @@ from fractions import Fraction
 import numpy as np
 from scipy.signal import resample_poly
 
+from .i18n import T
+
 IR_SAMPLES = 512
 IR_RECORD_SIZE = 0x808
 SLOT_SIZE = 0x1000
@@ -55,7 +57,7 @@ def read_wav(path: str) -> tuple[np.ndarray, WavInfo]:
     with open(path, "rb") as f:
         data = f.read()
     if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
-        raise WavError("O arquivo não é um WAV válido (falta o cabeçalho RIFF/WAVE).")
+        raise WavError(T("O arquivo não é um WAV válido (falta o cabeçalho RIFF/WAVE)."))
     pos, fmt_chunk, pcm = 12, None, None
     while pos + 8 <= len(data):
         cid, size = data[pos:pos + 4], struct.unpack_from("<I", data, pos + 4)[0]
@@ -66,14 +68,14 @@ def read_wav(path: str) -> tuple[np.ndarray, WavInfo]:
             pcm = body
         pos += 8 + size + (size & 1)
     if fmt_chunk is None or pcm is None:
-        raise WavError("WAV sem os blocos 'fmt' ou 'data'.")
+        raise WavError(T("WAV sem os blocos 'fmt' ou 'data'."))
     fmt, channels, rate, _brate, align, bits = struct.unpack_from("<HHIIHH", fmt_chunk)
     if fmt == 0xFFFE and len(fmt_chunk) >= 26:  # WAVE_FORMAT_EXTENSIBLE: o subformato fica no GUID
         fmt = struct.unpack_from("<H", fmt_chunk, 24)[0]
     width = bits // 8
     frames = len(pcm) // align if align else 0
     if frames == 0:
-        raise WavError("O WAV não tem amostras.")
+        raise WavError(T("O WAV não tem amostras."))
     raw = np.frombuffer(pcm[:frames * align], dtype=np.uint8).reshape(frames, align)[:, :width]
     if fmt == 1 and bits == 16:
         samples = raw.copy().view("<i2")[:, 0] / 32767.0
@@ -86,7 +88,8 @@ def read_wav(path: str) -> tuple[np.ndarray, WavInfo]:
     elif fmt == 3 and bits == 32:
         samples = raw.copy().view("<f4")[:, 0].astype(np.float64)
     else:
-        raise WavError(f"Formato WAV não suportado ({bits} bits, tipo {fmt}). Use PCM 16/24 bits ou float 32.")
+        raise WavError(T("Formato WAV não suportado ({bits} bits, tipo {fmt}). Use PCM 16/24 bits ou float 32.",
+                          bits=bits, fmt=fmt))
     return samples, WavInfo(channels, rate, bits, fmt, frames)
 
 

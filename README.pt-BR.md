@@ -87,6 +87,7 @@ do CubeSuite ou por medição:
 | Ler os presets A, B e C do pedal | ✅ |
 | Alterar todos os controles **ao vivo** (ouve na hora) | ✅ |
 | Ligar/desligar cada seção (IR, Ambiente, Tonalidade) | ✅ |
+| Interface em **português e inglês** (troque quando quiser, no canto inferior direito) | ✅ |
 | Salvar os presets no pedal (com conferência) | ✅ |
 | Voltar os presets aos valores de fábrica | ✅ |
 | USB Loopback (ligar/desligar, mostra o estado real) | ✅ |

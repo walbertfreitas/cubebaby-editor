@@ -5,7 +5,7 @@ use the pedal as an audio interface, **no Windows and no Wine required**.
 
 🇧🇷 [Leia em português](README.pt-BR.md)
 
-![Cube Baby Editor screenshot](docs/screenshot.png)
+![Cube Baby Editor screenshot](docs/screenshot-en.png)
 
 ---
 
@@ -23,7 +23,7 @@ use the pedal as an audio interface, **no Windows and no Wine required**.
 > on your own system). **Not affiliated with, endorsed or supported by Cuvave / M-VAVE.** Cube Baby,
 > Cuvave and M-VAVE are trademarks of their respective owners. No Cuvave files, code or firmware are
 > distributed here. **Use at your own risk** — the software is provided "as is", without warranty
-> (see the [license](LICENSE)). The app's interface is in Brazilian Portuguese.
+> (see the [license](LICENSE)).
 
 ---
 
@@ -86,6 +86,7 @@ or by measurement:
 | Read presets A, B and C from the pedal | ✅ |
 | Change every control **live** (you hear it immediately) | ✅ |
 | Turn each section on/off (IR, Ambience, Tone) | ✅ |
+| Interface in **English and Portuguese** (switch any time, at the bottom right) | ✅ |
 | Save presets to the pedal (with read-back verification) | ✅ |
 | Reset presets to factory values | ✅ |
 | USB Loopback (on/off, shows the real state) | ✅ |
@@ -145,8 +146,7 @@ connected, the program says so and does nothing.
 1. Switch the pedal on and connect it to the computer with the USB cable.
 2. **Close CubeSuite/Wine** if it is open — two programs talking to the pedal at once get in each
    other's way.
-3. Open Cube Baby Editor. The bottom bar should say `Conectado: Cube Baby AC (chip 0x4FCE)`
-   ("Connected").
+3. Open Cube Baby Editor. The bottom bar should say `Connected: Cube Baby AC (chip 0x4FCE)`.
 4. On the **first connection**, the program automatically **backs up the 8 IRs and 3 presets**
    currently on the pedal (about 15 seconds). If you never changed the IRs, this backup **is the
    factory IR set** — keep it safe.
@@ -181,8 +181,8 @@ arecord -D plughw:2,0 -f S16_LE -r 48000 -c 1 -d 5 test.wav && aplay test.wav
 - **A, B and C** — three "memories" holding every setting. You switch between them on the pedal
   itself. In the program, the A/B/C selector only chooses **which one** you're editing.
 - **Live vs. saved** — changing a control changes the sound **immediately**, but it is only stored
-  permanently when you click **"Salvar presets no pedal"** (Save presets to the pedal; the button
-  shows a `*` when there are unsaved changes). Unsaved changes are lost when the pedal is switched off.
+  permanently when you click **"Save presets to pedal"** (the button shows a `*` when there are
+  unsaved changes). Unsaved changes are lost when the pedal is switched off.
 
 ### Controls
 
@@ -202,8 +202,8 @@ arecord -D plughw:2,0 -f S16_LE -r 48000 -c 1 -d 5 test.wav && aplay test.wav
 They turn a whole section on/off without losing its settings:
 
 - **IR** → controls IR CAB
-- **Ambiente** (ambience) → TIME, SPACE and MOD
-- **Tonalidade** (tone) → ANTI FB, COMP, BASS, MID and TREB
+- **Ambience** → TIME, SPACE and MOD
+- **Tone** → ANTI FB, COMP, BASS, MID and TREB
 
 ### Tools
 
@@ -213,8 +213,8 @@ They turn a whole section on/off without losing its settings:
     Zoom, etc.
   - **Off:** use it when **recording in an audio program** (Reaper, Audacity…). With it on, the
     program would record what it is playing back (echo / doubled tracks).
-- **Presets de fábrica** (factory presets) — resets A, B and C to their original values. IRs are not touched.
-- **IRs de fábrica** (factory IRs), **backup** and **restore** — see
+- **Factory presets** — resets A, B and C to their original values. IRs are not touched.
+- **Factory IRs**, **Back up IRs** and **Restore IR backup** — see
   [Backups and factory IRs](#backups-and-factory-irs).
 
 ## Importing IRs
@@ -222,10 +222,10 @@ They turn a whole section on/off without losing its settings:
 An **IR** (*impulse response*) is a sonic "fingerprint" of a guitar body or cabinet. The pedal has
 **8 slots** for IRs, selected with the **IR CAB** control.
 
-1. Click **"Abrir arquivo WAV…"** (Open WAV file) and pick the IR.
+1. Click **"Open WAV file…"** and pick the IR.
 2. Check the information and the waveform preview.
-3. Set **Distance** and choose the slot in **"Gravar no slot"** (write to slot).
-4. Click **"Gravar IR no pedal"** (write IR to the pedal). The previous IR in that slot is backed up
+3. Set **Distance** and choose the slot in **"Write to slot"**.
+4. Click **"Write IR to pedal"**. The previous IR in that slot is backed up
    automatically first.
 5. Set **IR CAB** to the slot number and listen.
 
@@ -243,8 +243,8 @@ is used).
   acoustic IR, the tonal error dropped ~14% overall and **~32% in the low end**. It slightly changes
   the attack — compare by ear, toggling it on and off.
 
-The program shows how much of the IR fits (e.g. *"O pedal guarda 10.7 ms de 46.5 ms; 94.8% da
-energia do IR coube"* — the pedal keeps 10.7 of 46.5 ms; 94.8% of the IR's energy fits).
+The program shows how much of the IR fits (e.g. *"The pedal keeps 10.7 ms of 46.5 ms; 94.8% of the
+IR's energy fits"*).
 
 ### Distance
 
@@ -265,9 +265,9 @@ Everything lives in `~/.local/share/cubebaby-editor/` (hidden folder — include
 | `backups/irs-completo-*.bin` | automatic full backup before restoring/rewriting all 8 IRs |
 | `factory/BCIF.bin` | factory IRs (copy of CubeSuite's file) |
 
-- **"Restaurar backup de IRs…"** (restore IR backup) accepts **full** backups (32 KB, all 8 IRs)
+- **"Restore IR backup…"** accepts **full** backups (32 KB, all 8 IRs)
   and **single-slot** backups (4 KB — the slot is read from the file name).
-- **"IRs de fábrica"** (factory IRs) needs `BCIF.bin`, which ships inside the official CubeSuite
+- **"Factory IRs"** needs `BCIF.bin`, which ships inside the official CubeSuite
   and **cannot be distributed here** (it belongs to Cuvave). The first time, the program asks you to
   locate it and keeps a copy; after that CubeSuite is no longer needed.
   - How to get it: download CubeSuite from the **official M-VAVE website**, unzip it and look for
@@ -291,13 +291,13 @@ Windows or Wine) for that.
 
 | Symptom | Fix |
 |---|---|
-| "Pedal não encontrado" (pedal not found) | Check the cable (some cables only charge and carry no data) and that the pedal is on. Run `amidi -l`: `USB2.0 Device MIDI 1` should be listed. |
-| Connects then loses the connection / "Sem resposta do pedal" (no response) | Close CubeSuite/Wine and any other MIDI program using the pedal. Unplug and replug the cable. |
+| "Pedal not found" | Check the cable (some cables only charge and carry no data) and that the pedal is on. Run `amidi -l`: `USB2.0 Device MIDI 1` should be listed. |
+| Connects then loses the connection / "No response from the pedal" | Close CubeSuite/Wine and any other MIDI program using the pedal. Unplug and replug the cable. |
 | The program doesn't open; error about `xcb` or `xcb-cursor` | `sudo apt install libxcb-cursor0` |
 | `apt` says `python3-pyqt6` doesn't exist | Your system is too old for the `.deb` (e.g. Ubuntu 22.04). [Install from source](#install-from-source-other-distributions). |
-| "Modelo não suportado (id 0x…)" (unsupported model) | Your pedal isn't a Cube Baby AC. The program won't risk writing to it. See [Contributing](#contributing). |
-| "A verificação falhou" (verification failed) when writing | Nothing was lost: the slot was backed up first. Try again; if it repeats, change the USB cable/port. |
-| The IR sounds odd | Try toggling "Converter para 48 kHz" and "fase mínima", and a different Distance value. |
+| "Unsupported model (id 0x…)" | Your pedal isn't a Cube Baby AC. The program won't risk writing to it. See [Contributing](#contributing). |
+| "Verification failed" when writing | Nothing was lost: the slot was backed up first. Try again; if it repeats, change the USB cable/port. |
+| The IR sounds odd | Try toggling "Resample to 48 kHz" and "minimum phase", and a different Distance value. |
 
 For detailed messages, start it from a terminal: `cubebaby-editor`.
 
