@@ -38,9 +38,9 @@ EN = {
     "IR": "IR",
     "Ambiente": "Ambience",
     "Tonalidade": "Tone",
-    "{name}: ligado": "{name}: on",
-    "{name}: desligado": "{name}: off",
     # Conexão
+    "Conectado": "Connected",
+    "Desconectado": "Disconnected",
     "Conectado: Cube Baby AC (chip 0x{chip:04X}).": "Connected: Cube Baby AC (chip 0x{chip:04X}).",
     "{msg} Tentando de novo…": "{msg} Retrying…",
     "Conexão perdida: {msg}.": "Connection lost: {msg}.",

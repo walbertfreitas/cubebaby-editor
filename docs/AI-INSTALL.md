@@ -164,7 +164,7 @@ are, and that **firmware updates are intentionally not supported**. Point them t
 | `lsusb` doesn't show `301a:5555` | Cable or power issue — ask the user to try another cable/port and make sure the pedal is on. |
 | App says "Modelo não suportado" | The pedal isn't a Cube Baby AC. **Stop**; do not try to force it. |
 | App says "Pedal não encontrado" but `amidi -l` lists it | Another program holds the port (CubeSuite/Wine, a DAW). Ask the user to close it. |
-| Running on Wayland and the window doesn't appear | Try `QT_QPA_PLATFORM=xcb cubebaby-editor` and report the output. |
+| Running on Wayland and the window doesn't appear | The app uses XWayland by default on Wayland (so the system draws the title bar). Try `QT_QPA_PLATFORM=wayland cubebaby-editor` and report the output. |
 
 ## Uninstall
 

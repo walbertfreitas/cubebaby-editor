@@ -87,6 +87,7 @@ or by measurement:
 | Change every control **live** (you hear it immediately) | ✅ |
 | Turn each section on/off (IR, Ambience, Tone) | ✅ |
 | Interface in **English and Portuguese** (switch any time, at the bottom right) | ✅ |
+| Minimalist black-and-white look; the title bar follows the system theme | ✅ |
 | Save presets to the pedal (with read-back verification) | ✅ |
 | Reset presets to factory values | ✅ |
 | USB Loopback (on/off, shows the real state) | ✅ |
@@ -199,7 +200,7 @@ arecord -D plughw:2,0 -f S16_LE -r 48000 -c 1 -d 5 test.wav && aplay test.wav
 
 ### Section switches
 
-They turn a whole section on/off without losing its settings:
+The switches next to each section name turn the whole section on/off without losing its settings:
 
 - **IR** → controls IR CAB
 - **Ambience** → TIME, SPACE and MOD
@@ -297,6 +298,7 @@ Windows or Wine) for that.
 | `apt` says `python3-pyqt6` doesn't exist | Your system is too old for the `.deb` (e.g. Ubuntu 22.04). [Install from source](#install-from-source-other-distributions). |
 | "Unsupported model (id 0x…)" | Your pedal isn't a Cube Baby AC. The program won't risk writing to it. See [Contributing](#contributing). |
 | "Verification failed" when writing | Nothing was lost: the slot was backed up first. Try again; if it repeats, change the USB cable/port. |
+| Blurry window when using fractional scaling (e.g. 125%) | On Wayland the program runs through XWayland so that the system draws the title bar. Open it with `QT_QPA_PLATFORM=wayland cubebaby-editor` (sharp window, but with Qt's own title bar). |
 | The IR sounds odd | Try toggling "Resample to 48 kHz" and "minimum phase", and a different Distance value. |
 
 For detailed messages, start it from a terminal: `cubebaby-editor`.

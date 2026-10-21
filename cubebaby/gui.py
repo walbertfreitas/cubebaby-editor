@@ -1,6 +1,7 @@
 """Interface do editor nativo do Cube Baby AC."""
 from __future__ import annotations
 
+import math
 import os
 import re
 import shutil
@@ -14,10 +15,10 @@ QSettings, Qt, QTimer = QtCore.QSettings, QtCore.Qt, QtCore.QTimer
 QColor, QIcon, QPainter, QPainterPath, QPen = (QtGui.QColor, QtGui.QIcon, QtGui.QPainter,
                                                QtGui.QPainterPath, QtGui.QPen)
 W = QtWidgets
-(QApplication, QCheckBox, QComboBox, QDial, QFileDialog, QFrame, QGridLayout, QGroupBox, QHBoxLayout,
+(QApplication, QButtonGroup, QCheckBox, QComboBox, QDial, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
  QLabel, QMainWindow, QMessageBox, QProgressBar, QPushButton, QSlider, QSpinBox, QVBoxLayout,
- QWidget) = (W.QApplication, W.QCheckBox, W.QComboBox, W.QDial, W.QFileDialog, W.QFrame, W.QGridLayout,
-             W.QGroupBox, W.QHBoxLayout, W.QLabel, W.QMainWindow, W.QMessageBox, W.QProgressBar,
+ QWidget) = (W.QApplication, W.QButtonGroup, W.QCheckBox, W.QComboBox, W.QDial, W.QFileDialog, W.QFrame,
+             W.QGridLayout, W.QHBoxLayout, W.QLabel, W.QMainWindow, W.QMessageBox, W.QProgressBar,
              W.QPushButton, W.QSlider, W.QSpinBox, W.QVBoxLayout, W.QWidget)
 YES = QMessageBox.StandardButton.Yes
 
@@ -27,7 +28,14 @@ from .i18n import T
 from .model import PARAMS, SWITCHES, CubeBabyAC, Presets
 from .worker import DeviceWorker
 
-ACCENT = "#33EAB8"
+# Paleta monocromática
+BG = "#0a0a0a"        # fundo da janela
+SURFACE = "#141414"   # cartões
+RAISED = "#1f1f1f"    # campos e botões
+LINE = "#2a2a2a"      # contornos e trilhos
+TEXT = "#f2f2f2"
+MUTED = "#8a8a8a"
+FAINT = "#4a4a4a"     # desativado
 APP_NAME = "Cube Baby Editor"
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".local", "share", "cubebaby-editor")
 BACKUP_DIR = os.path.join(DATA_DIR, "backups")
@@ -35,59 +43,79 @@ FACTORY_IR_FILE = os.path.join(DATA_DIR, "factory", "BCIF.bin")
 DEFAULT_CUBESUITE = os.path.expanduser("~")
 
 STYLE = f"""
-QWidget {{ background: #0b0f0e; color: #d6f5ec; font-size: 10pt; }}
-QGroupBox {{ border: 1px solid {ACCENT}; border-radius: 10px; margin-top: 14px; padding: 10px; }}
-QGroupBox::title {{ subcontrol-origin: margin; left: 12px; padding: 0 4px; color: {ACCENT}; }}
-QPushButton {{ border: 1px solid {ACCENT}; border-radius: 8px; padding: 6px 12px; background: #10231e; }}
-QPushButton:hover {{ background: #173a31; }}
-QPushButton:disabled {{ color: #5d7a72; border-color: #2c4a42; }}
-QPushButton:checked {{ background: {ACCENT}; color: #0b0f0e; }}
-QPushButton:checked:disabled {{ background: #2c4a42; color: #8fb5aa; }}
-QSlider::groove:horizontal {{ height: 4px; background: #2a3a36; border-radius: 2px; }}
-QSlider::sub-page:horizontal {{ background: #e8f5f1; border-radius: 2px; }}
-QSlider::handle:horizontal {{ background: {ACCENT}; width: 14px; margin: -6px 0; border-radius: 7px; }}
-QSlider:disabled::handle:horizontal {{ background: #3b524c; }}
-QSpinBox, QComboBox {{ border: 1px solid {ACCENT}; border-radius: 4px; padding: 2px 4px; background: #0f1a17; }}
-QSpinBox {{ padding-right: 20px; min-width: 42px; }}
-QSpinBox:disabled {{ color: #5d7a72; border-color: #2c4a42; }}
-QSpinBox::up-button, QSpinBox::down-button {{
-    subcontrol-origin: border; width: 18px; background: #173a31; border-left: 1px solid {ACCENT}; }}
-QSpinBox::up-button {{ subcontrol-position: top right; border-top-right-radius: 4px;
-    border-bottom: 1px solid #0b0f0e; }}
-QSpinBox::down-button {{ subcontrol-position: bottom right; border-bottom-right-radius: 4px; }}
-QSpinBox::up-button:hover, QSpinBox::down-button:hover {{ background: #24584a; }}
-QSpinBox::up-button:pressed, QSpinBox::down-button:pressed {{ background: {ACCENT}; }}
-QSpinBox::up-button:disabled, QSpinBox::down-button:disabled {{ background: #10231e; border-left-color: #2c4a42; }}
+QWidget {{ background: {BG}; color: {TEXT}; font-family: "Inter"; font-size: 10pt; }}
+QLabel, QCheckBox, QSlider {{ background: transparent; }}
+QLabel:disabled, QCheckBox:disabled {{ color: {FAINT}; }}
+QFrame#card {{ background: {SURFACE}; border-radius: 14px; }}
+QFrame#preview {{ background: {BG}; border-radius: 10px; }}
+QLabel#section {{ color: {MUTED}; font-size: 8pt; font-weight: 600; }}
+QLabel#title {{ font-size: 13pt; font-weight: 600; }}
+QLabel#param {{ color: {MUTED}; font-size: 9pt; }}
+QLabel#hint, QLabel#status {{ color: {MUTED}; }}
+QPushButton {{ border: 1px solid {LINE}; border-radius: 8px; padding: 7px 14px; background: {RAISED}; }}
+QPushButton:hover {{ background: #2a2a2a; border-color: #3a3a3a; }}
+QPushButton:pressed {{ background: #333333; }}
+QPushButton:disabled {{ color: {FAINT}; background: {SURFACE}; border-color: {RAISED}; }}
+QPushButton#primary {{ background: {TEXT}; color: {BG}; border: none; font-weight: 600; padding: 9px 14px; }}
+QPushButton#primary:hover {{ background: #ffffff; }}
+QPushButton#primary:pressed {{ background: #cfcfcf; }}
+QPushButton#primary:disabled {{ background: {RAISED}; color: {FAINT}; }}
+QFrame#segbar {{ background: {RAISED}; border-radius: 8px; }}
+QPushButton#seg {{ border: none; border-radius: 6px; padding: 4px 0; min-width: 34px; background: transparent;
+    color: {MUTED}; font-weight: 600; }}
+QPushButton#seg:hover {{ color: {TEXT}; }}
+QPushButton#seg:checked {{ background: {TEXT}; color: {BG}; }}
+QPushButton#seg:disabled {{ color: {FAINT}; }}
+QPushButton#seg:checked:disabled {{ background: {LINE}; color: {MUTED}; }}
+QSlider::groove:horizontal {{ height: 2px; background: {LINE}; border-radius: 1px; }}
+QSlider::sub-page:horizontal {{ background: {TEXT}; border-radius: 1px; }}
+QSlider::handle:horizontal {{ background: {TEXT}; width: 12px; margin: -5px 0; border-radius: 6px; }}
+QSlider::sub-page:horizontal:disabled {{ background: {FAINT}; }}
+QSlider::handle:horizontal:disabled {{ background: {FAINT}; }}
+QSpinBox, QComboBox {{ border: 1px solid {LINE}; border-radius: 6px; padding: 3px 6px; background: {RAISED}; }}
+QSpinBox:focus, QComboBox:focus {{ border-color: #5a5a5a; }}
+QSpinBox {{ padding-right: 18px; min-width: 38px; }}
+QSpinBox:disabled, QComboBox:disabled {{ color: {FAINT}; background: {SURFACE}; border-color: {RAISED}; }}
+QSpinBox::up-button, QSpinBox::down-button {{ subcontrol-origin: border; width: 16px; background: transparent;
+    border: none; }}
+QSpinBox::up-button {{ subcontrol-position: top right; }}
+QSpinBox::down-button {{ subcontrol-position: bottom right; }}
+QSpinBox::up-button:hover, QSpinBox::down-button:hover {{ background: #2e2e2e; }}
+QComboBox::drop-down {{ border: none; width: 18px; }}
+QComboBox QAbstractItemView {{ background: {RAISED}; border: 1px solid {LINE}; outline: none;
+    selection-background-color: {TEXT}; selection-color: {BG}; }}
+QProgressBar {{ border: none; border-radius: 2px; background: {LINE}; max-height: 4px; }}
+QProgressBar::chunk {{ background: {TEXT}; border-radius: 2px; }}
+QToolTip {{ background: {RAISED}; color: {TEXT}; border: 1px solid {LINE}; padding: 4px; }}
 @ARROWS@
-QProgressBar {{ border: 1px solid {ACCENT}; border-radius: 4px; text-align: center; }}
-QProgressBar::chunk {{ background: {ACCENT}; }}
-QLabel#hint {{ color: #8fb5aa; }}
 """
 
 
 def _arrow_png(path: str, up: bool, color: str) -> str:
-    """Desenha uma seta (triângulo) em PNG para os botões dos campos numéricos."""
+    """Desenha uma seta (chevron) em PNG para os campos numéricos e listas."""
     pix = QtGui.QPixmap(10, 6)
     pix.fill(QColor(0, 0, 0, 0))
     p = QPainter(pix)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    p.setPen(Qt.PenStyle.NoPen)
-    p.setBrush(QColor(color))
-    pts = [QtCore.QPointF(0, 6), QtCore.QPointF(10, 6), QtCore.QPointF(5, 0)] if up else \
-          [QtCore.QPointF(0, 0), QtCore.QPointF(10, 0), QtCore.QPointF(5, 6)]
-    p.drawPolygon(QtGui.QPolygonF(pts))
+    pen = QPen(QColor(color), 1.6)
+    pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+    p.setPen(pen)
+    pts = [QtCore.QPointF(1.5, 5), QtCore.QPointF(5, 1.5), QtCore.QPointF(8.5, 5)] if up else \
+          [QtCore.QPointF(1.5, 1), QtCore.QPointF(5, 4.5), QtCore.QPointF(8.5, 1)]
+    p.drawPolyline(QtGui.QPolygonF(pts))
     p.end()
     pix.save(path, "PNG")
     return path
 
 
 def _check_png(path: str) -> str:
-    """Marca de seleção escura, desenhada sobre o fundo verde-água da caixa marcada."""
+    """Marca de seleção preta, desenhada sobre o fundo branco da caixa marcada."""
     pix = QtGui.QPixmap(14, 14)
     pix.fill(QColor(0, 0, 0, 0))
     p = QPainter(pix)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    pen = QPen(QColor("#0b0f0e"), 2.2)
+    pen = QPen(QColor(BG), 2)
     pen.setCapStyle(Qt.PenCapStyle.RoundCap)
     pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
     p.setPen(pen)
@@ -103,27 +131,125 @@ def app_style() -> str:
     os.makedirs(folder, exist_ok=True)
     rules = []
     for name, up in (("up", True), ("down", False)):
-        on = _arrow_png(os.path.join(folder, f"arrow-{name}.png"), up, ACCENT)
-        off = _arrow_png(os.path.join(folder, f"arrow-{name}-off.png"), up, "#3b524c")
+        on = _arrow_png(os.path.join(folder, f"chevron-{name}.png"), up, TEXT)
+        off = _arrow_png(os.path.join(folder, f"chevron-{name}-off.png"), up, FAINT)
         rules.append(f"QSpinBox::{name}-arrow {{ image: url({on}); width: 10px; height: 6px; }}")
         rules.append(f"QSpinBox::{name}-arrow:disabled, QSpinBox::{name}-arrow:off {{ image: url({off}); }}")
-    check = _check_png(os.path.join(folder, "check.png"))
-    rules.append(f"QCheckBox::indicator {{ width: 14px; height: 14px; border: 1px solid {ACCENT}; border-radius: 3px; "
-                 f"background: #0f1a17; }}")
-    rules.append(f"QCheckBox::indicator:checked {{ background: {ACCENT}; image: url({check}); }}")
-    rules.append("QCheckBox::indicator:disabled { border-color: #2c4a42; background: #10231e; }")
-    rules.append("QCheckBox:disabled { color: #5d7a72; }")
+        if not up:
+            muted = _arrow_png(os.path.join(folder, "chevron-down-muted.png"), up, MUTED)
+            rules.append(f"QComboBox::down-arrow {{ image: url({muted}); width: 10px; height: 6px; }}")
+            rules.append(f"QComboBox::down-arrow:disabled {{ image: url({off}); }}")
+    check = _check_png(os.path.join(folder, "check-mono.png"))
+    rules.append(f"QCheckBox::indicator {{ width: 14px; height: 14px; border: 1px solid #5a5a5a; border-radius: 4px; "
+                 f"background: transparent; }}")
+    rules.append(f"QCheckBox::indicator:checked {{ background: {TEXT}; border-color: {TEXT}; image: url({check}); }}")
+    rules.append(f"QCheckBox::indicator:disabled {{ border-color: {LINE}; background: transparent; }}")
     return STYLE.replace("@ARROWS@", "\n".join(rules))
+
+
+def card(title_label: QLabel) -> tuple[QFrame, QVBoxLayout]:
+    """Cartão sem borda com um título pequeno em maiúsculas."""
+    frame = QFrame(objectName="card")
+    v = QVBoxLayout(frame)
+    v.setContentsMargins(18, 16, 18, 18)
+    v.setSpacing(12)
+    v.addWidget(title_label)
+    return frame, v
+
+
+class SectionLabel(QLabel):
+    """Título de seção: maiúsculas e letras espaçadas."""
+
+    def __init__(self):
+        super().__init__(objectName="section")
+        font = self.font()
+        font.setLetterSpacing(QtGui.QFont.SpacingType.AbsoluteSpacing, 1.4)
+        self.setFont(font)
+
+    def setText(self, text):
+        super().setText(text.upper())
+
+
+class Toggle(QCheckBox):
+    """Chave liga/desliga: texto à esquerda e a chave à direita; a linha inteira é clicável."""
+
+    def __init__(self, text="", divider=False, **kw):
+        super().__init__(text, **kw)
+        self.divider = divider
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def sizeHint(self):
+        return QtCore.QSize(160, 40 if self.divider else 28)
+
+    def hitButton(self, pos):
+        return self.rect().contains(pos)
+
+    def paintEvent(self, _ev):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        w, h = self.width(), self.height()
+        enabled, on = self.isEnabled(), self.isChecked()
+        if self.divider:
+            p.setPen(QPen(QColor(LINE), 1))
+            p.drawLine(0, 0, w, 0)
+        cy = (h + (6 if self.divider else 0)) / 2
+        font = self.font()
+        font.setWeight(QtGui.QFont.Weight.DemiBold if self.divider else QtGui.QFont.Weight.Normal)
+        p.setFont(font)
+        p.setPen(QColor(TEXT if enabled and (on or not self.divider) else MUTED if enabled else FAINT))
+        p.drawText(QtCore.QRectF(0, cy - 10, w - 50, 20),
+                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, self.text())
+        track = QtCore.QRectF(w - 36, cy - 10, 36, 20)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor((TEXT if on else LINE) if enabled else RAISED))
+        p.drawRoundedRect(track, 10, 10)
+        knob_x = track.right() - 18 if on else track.left() + 2
+        p.setBrush(QColor((BG if on else MUTED) if enabled else FAINT))
+        p.drawEllipse(QtCore.QRectF(knob_x, cy - 8, 16, 16))
+
+
+class Knob(QDial):
+    """Botão giratório minimalista: arco de 270° com o valor em branco e um traço indicador."""
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def paintEvent(self, _ev):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        side = min(self.width(), self.height()) - 8
+        rect = QtCore.QRectF((self.width() - side) / 2, (self.height() - side) / 2, side, side)
+        span = self.maximum() - self.minimum()
+        frac = (self.value() - self.minimum()) / span if span else 0
+        pen = QPen(QColor(LINE), 3)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        p.setPen(pen)
+        p.drawArc(rect, 225 * 16, -270 * 16)
+        if frac > 0:
+            pen.setColor(QColor(TEXT if self.isEnabled() else FAINT))
+            p.setPen(pen)
+            p.drawArc(rect, 225 * 16, int(-270 * 16 * frac))
+        inner = rect.adjusted(9, 9, -9, -9)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(RAISED))
+        p.drawEllipse(inner)
+        angle = math.radians(225 - 270 * frac)
+        c, r = inner.center(), inner.width() / 2
+        pen = QPen(QColor(TEXT if self.isEnabled() else FAINT), 2.4)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        p.setPen(pen)
+        p.drawLine(QtCore.QPointF(c.x() + math.cos(angle) * r * 0.35, c.y() - math.sin(angle) * r * 0.35),
+                   QtCore.QPointF(c.x() + math.cos(angle) * r * 0.78, c.y() - math.sin(angle) * r * 0.78))
 
 
 class IrPreview(QFrame):
     """Desenha a forma de onda das 512 amostras do IR."""
 
     def __init__(self):
-        super().__init__()
+        super().__init__(objectName="preview")
         self.samples: list[float] = []
-        self.setMinimumSize(260, 140)
-        self.setStyleSheet(f"border: 1px solid {ACCENT}; border-radius: 10px;")
+        self.setMinimumSize(260, 130)
 
     def set_samples(self, samples):
         self.samples = list(samples)
@@ -135,20 +261,20 @@ class IrPreview(QFrame):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
         mid = h / 2
-        p.setPen(QPen(QColor("#2a3a36"), 1))
-        p.drawLine(8, int(mid), w - 8, int(mid))
+        p.setPen(QPen(QColor(LINE), 1))
+        p.drawLine(12, int(mid), w - 12, int(mid))
         if not self.samples:
-            p.setPen(QColor("#5d7a72"))
+            p.setPen(QColor(FAINT))
             p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, T("Nenhum IR carregado"))
             return
         peak = max(1e-9, max(abs(s) for s in self.samples))
         path = QPainterPath()
         n = len(self.samples)
         for i, s in enumerate(self.samples):
-            x = 8 + (w - 16) * i / (n - 1)
-            y = mid - (h / 2 - 10) * s / peak
+            x = 12 + (w - 24) * i / (n - 1)
+            y = mid - (h / 2 - 12) * s / peak
             path.moveTo(x, y) if i == 0 else path.lineTo(x, y)
-        p.setPen(QPen(QColor(ACCENT), 1.4))
+        p.setPen(QPen(QColor(TEXT), 1.2))
         p.drawPath(path)
 
 
@@ -193,6 +319,7 @@ class MainWindow(QMainWindow):
             apply()
         self.dial_label.setText(T("Distance: {v}%", v=self.dial.value()))
         self._set_dirty(self.dirty)
+        self._set_connected(self.ac is not None)
         for off, btn in self.switch_buttons.items():
             self._apply_switch_state(off, btn)
         self._refresh_ir()
@@ -211,14 +338,27 @@ class MainWindow(QMainWindow):
         root = QWidget()
         self.setCentralWidget(root)
         outer = QVBoxLayout(root)
+        outer.setContentsMargins(20, 16, 20, 14)
+        outer.setSpacing(14)
+
+        header = QHBoxLayout()
+        header.addWidget(QLabel(APP_NAME, objectName="title"))
+        header.addStretch(1)
+        self.conn_dot = QLabel("●")
+        self.conn_label = QLabel(objectName="hint")
+        header.addWidget(self.conn_dot)
+        header.addWidget(self.conn_label)
+        outer.addLayout(header)
+
         cols = QHBoxLayout()
-        outer.addLayout(cols)
+        cols.setSpacing(14)
+        outer.addLayout(cols, 1)
         cols.addLayout(self._build_ir_column(), 1)
         cols.addWidget(self._build_preset_group(), 1)
 
         bottom = QHBoxLayout()
-        self.status = QLabel()
-        self.progress = QProgressBar(maximumWidth=220, visible=False)
+        self.status = QLabel(objectName="status")
+        self.progress = QProgressBar(maximumWidth=180, visible=False, textVisible=False)
         self.lang_combo = QComboBox()
         for code, name in i18n.LANGS.items():
             self.lang_combo.addItem(name, code)
@@ -226,26 +366,18 @@ class MainWindow(QMainWindow):
         self.lang_combo.currentIndexChanged.connect(self._on_language)
         bottom.addWidget(self.status, 1)
         bottom.addWidget(self.progress)
-        bottom.addWidget(self._tr(QLabel(), "setText", "Idioma:"))
+        bottom.addSpacing(12)
+        bottom.addWidget(self._tr(QLabel(objectName="hint"), "setText", "Idioma:"))
         bottom.addWidget(self.lang_combo)
         outer.addLayout(bottom)
 
     def _build_ir_column(self):
         col = QVBoxLayout()
-        box = self._tr(QGroupBox(), "setTitle", "Importar IR")
-        g = QGridLayout(box)
+        col.setSpacing(14)
+        box, v = card(self._tr(SectionLabel(), "setText", "Importar IR"))
+        self.preview = IrPreview()
         self.btn_open = self._tr(QPushButton(clicked=self._open_wav), "setText", "Abrir arquivo WAV…")
         self.ir_info = QLabel("", objectName="hint", wordWrap=True)
-        self.dial = QDial(minimum=0, maximum=100, value=50, notchesVisible=True)
-        self.dial.setFixedSize(80, 80)
-        self.dial_label = QLabel()
-        self.dial.valueChanged.connect(lambda v: self.dial_label.setText(T("Distance: {v}%", v=v)))
-        self.slot_combo = QComboBox()
-        self.slot_combo.addItems([str(i) for i in range(1, ir.SLOT_COUNT + 1)])
-        self.btn_import = self._tr(QPushButton(clicked=self._import_ir, enabled=False), "setText",
-                                   "Gravar IR no pedal")
-        self.preview = IrPreview()
-
         self.chk_48k = self._tr(QCheckBox(checked=self.settings.value("to_48k", True, type=bool)),
                                 "setText", "Converter para 48 kHz")
         self.chk_minphase = self._tr(QCheckBox(checked=self.settings.value("min_phase", True, type=bool)),
@@ -255,66 +387,92 @@ class MainWindow(QMainWindow):
                  "preserve melhor o timbre, sobretudo os graves.")
         for chk in (self.chk_48k, self.chk_minphase):
             chk.toggled.connect(self._refresh_ir)
+        self.dial = Knob(minimum=0, maximum=100, value=50)
+        self.dial.setFixedSize(64, 64)
+        self.dial_label = QLabel()
+        self.dial.valueChanged.connect(lambda val: self.dial_label.setText(T("Distance: {v}%", v=val)))
+        self.slot_combo = QComboBox()
+        self.slot_combo.addItems([str(i) for i in range(1, ir.SLOT_COUNT + 1)])
+        self.btn_import = self._tr(QPushButton(clicked=self._import_ir, enabled=False, objectName="primary"),
+                                   "setText", "Gravar IR no pedal")
 
-        g.addWidget(self.btn_open, 0, 0, 1, 2)
-        g.addWidget(self.ir_info, 1, 0, 1, 2)
-        g.addWidget(self.chk_48k, 2, 0, 1, 2)
-        g.addWidget(self.chk_minphase, 3, 0, 1, 2)
-        g.addWidget(self.dial_label, 4, 0)
-        g.addWidget(self.dial, 4, 1, Qt.AlignmentFlag.AlignLeft)
-        g.addWidget(self._tr(QLabel(), "setText", "Gravar no slot:"), 5, 0)
-        g.addWidget(self.slot_combo, 5, 1)
-        g.addWidget(self.btn_import, 6, 0, 1, 2)
-        g.addWidget(self.preview, 0, 2, 7, 1)
-        col.addWidget(box)
+        v.addWidget(self.preview, 1)
+        v.addWidget(self.btn_open)
+        v.addWidget(self.ir_info)
+        v.addWidget(self.chk_48k)
+        v.addWidget(self.chk_minphase)
+        row = QHBoxLayout()
+        row.setSpacing(12)
+        row.addWidget(self.dial)
+        row.addWidget(self.dial_label)
+        row.addStretch(1)
+        row.addWidget(self._tr(QLabel(), "setText", "Gravar no slot:"))
+        row.addWidget(self.slot_combo)
+        v.addLayout(row)
+        v.addWidget(self.btn_import)
+        col.addWidget(box, 1)
 
-        tools = self._tr(QGroupBox(), "setTitle", "Ferramentas")
-        t = QGridLayout(tools)
+        tools, t = card(self._tr(SectionLabel(), "setText", "Ferramentas"))
+        grid = QGridLayout()
+        grid.setSpacing(8)
         self.btn_backup = self._tr(QPushButton(clicked=self._backup_irs), "setText", "Fazer backup dos IRs…")
         self.btn_restore = self._tr(QPushButton(clicked=self._restore_irs), "setText", "Restaurar backup de IRs…")
         self.btn_factory_ir = self._tr(QPushButton(clicked=self._factory_ir), "setText", "IRs de fábrica")
         self.btn_factory_reset = self._tr(QPushButton(clicked=self._factory_reset), "setText", "Presets de fábrica")
-        self.chk_loopback = QCheckBox("USB Loopback")
+        self.chk_loopback = Toggle("USB Loopback")
         self.chk_loopback.toggled.connect(self._on_loopback)
-        t.addWidget(self.btn_backup, 0, 0)
-        t.addWidget(self.btn_restore, 0, 1)
-        t.addWidget(self.btn_factory_ir, 1, 0)
-        t.addWidget(self.btn_factory_reset, 1, 1)
-        t.addWidget(self.chk_loopback, 2, 0, 1, 2)
+        grid.addWidget(self.btn_backup, 0, 0)
+        grid.addWidget(self.btn_restore, 0, 1)
+        grid.addWidget(self.btn_factory_ir, 1, 0)
+        grid.addWidget(self.btn_factory_reset, 1, 1)
+        t.addLayout(grid)
+        t.addWidget(self.chk_loopback)
         col.addWidget(tools)
-        col.addStretch(1)
         self.device_widgets = [self.btn_backup, self.btn_restore, self.btn_factory_ir,
                                self.btn_factory_reset, self.chk_loopback]
         return col
 
     def _build_preset_group(self):
-        box = self._tr(QGroupBox(), "setTitle", "Preset")
-        v = QVBoxLayout(box)
+        title = self._tr(SectionLabel(), "setText", "Preset")
+        box, v = card(title)
+        v.removeWidget(title)
         top = QHBoxLayout()
-        self.preset_combo = QComboBox()
-        self.preset_combo.addItems(["A", "B", "C"])
-        self.preset_combo.currentIndexChanged.connect(self._show_preset)
-        top.addWidget(self._tr(QLabel(), "setText", "Editar preset:"))
-        top.addWidget(self.preset_combo)
+        top.addWidget(title)
         top.addStretch(1)
+        segbar = QFrame(objectName="segbar")
+        seg = QHBoxLayout(segbar)
+        seg.setContentsMargins(3, 3, 3, 3)
+        seg.setSpacing(2)
+        self.preset_buttons = QButtonGroup(self)
+        for i, name in enumerate("ABC"):
+            btn = QPushButton(name, checkable=True, checked=i == 0, objectName="seg")
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            self.preset_buttons.addButton(btn, i)
+            seg.addWidget(btn)
+        self.preset_buttons.idClicked.connect(lambda _i: self._show_preset())
+        top.addWidget(segbar)
         v.addLayout(top)
 
         self.sliders: dict[str, tuple[QSlider, QSpinBox, int]] = {}
-        self.switch_buttons: dict[int, QPushButton] = {}
+        self.switch_buttons: dict[int, Toggle] = {}
         switch_before = {params[0]: (name, off) for name, off, params in SWITCHES}
         grid = QGridLayout()
+        grid.setHorizontalSpacing(14)
+        grid.setVerticalSpacing(6)
+        grid.setColumnMinimumWidth(0, 64)
         row = 0
         for name, offset, maximum in PARAMS:
             if name in switch_before:
                 sname, soff = switch_before[name]
-                btn = QPushButton(checkable=True, checked=True)
+                btn = Toggle(checked=True, divider=True)
                 btn.toggled.connect(partial(self._on_switch, soff, sname))
                 self.switch_buttons[soff] = btn
                 grid.addWidget(btn, row, 0, 1, 3)
                 row += 1
-            label = QLabel(name)  # nomes iguais aos impressos no pedal; não traduzir
+            label = QLabel(name, objectName="param")  # nomes iguais aos impressos no pedal; não traduzir
             slider = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=maximum)
-            spin = QSpinBox(minimum=0, maximum=maximum)
+            slider.setCursor(Qt.CursorShape.PointingHandCursor)
+            spin = QSpinBox(minimum=0, maximum=maximum, alignment=Qt.AlignmentFlag.AlignRight)
             slider.valueChanged.connect(spin.setValue)
             spin.valueChanged.connect(slider.setValue)
             spin.valueChanged.connect(partial(self._on_param, offset))
@@ -324,7 +482,8 @@ class MainWindow(QMainWindow):
             self.sliders[name] = (slider, spin, offset)
             row += 1
         v.addLayout(grid)
-        self.btn_save = QPushButton(clicked=self._save_presets)
+        v.addStretch(1)
+        self.btn_save = QPushButton(clicked=self._save_presets, objectName="primary")
         v.addWidget(self.btn_save)
         self.preset_box = box
         return box
@@ -394,6 +553,8 @@ class MainWindow(QMainWindow):
         self._on_connect_failed(T("Conexão perdida: {msg}.", msg=str(err)))
 
     def _set_connected(self, ok: bool):
+        self.conn_dot.setStyleSheet(f"color: {TEXT if ok else FAINT}; font-size: 8pt;")
+        self.conn_label.setText(T("Conectado" if ok else "Desconectado"))
         self.preset_box.setEnabled(ok)
         for w in self.device_widgets:
             w.setEnabled(ok)
@@ -402,7 +563,7 @@ class MainWindow(QMainWindow):
     # ----- presets -----------------------------------------------------------
 
     def _slot(self) -> int:
-        return self.preset_combo.currentIndex()
+        return self.preset_buttons.checkedId()
 
     def _show_preset(self):
         if not self.presets:
@@ -419,7 +580,7 @@ class MainWindow(QMainWindow):
     def _apply_switch_state(self, offset, btn):
         sname, _off, params = next(s for s in SWITCHES if s[1] == offset)
         on = btn.isChecked()
-        btn.setText(T("{name}: ligado" if on else "{name}: desligado", name=T(sname)))
+        btn.setText(T(sname))
         for p in params:
             slider, spin, _ = self.sliders[p]
             slider.setEnabled(on)
@@ -684,7 +845,12 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    app = QApplication(sys.argv)
+    # No Wayland o Qt desenha uma barra de título própria, fora do tema do sistema; pelo XWayland quem
+    # desenha é o GNOME, igual às outras janelas. Um QT_QPA_PLATFORM definido pelo usuário tem prioridade.
+    if os.environ.get("XDG_SESSION_TYPE") == "wayland" and os.environ.get("DISPLAY"):
+        os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
+    # No X11 o GNOME liga a janela ao .desktop (e ao ícone) pelo WM_CLASS, que o Qt tira do argv[0].
+    app = QApplication(["cubebaby-editor"] + sys.argv[1:])
     app.setApplicationName(APP_NAME)
     app.setDesktopFileName("cubebaby-editor")
     app.setStyleSheet(app_style())
@@ -692,6 +858,6 @@ def main():
     if os.path.exists(icon):
         app.setWindowIcon(QIcon(icon))
     win = MainWindow()
-    win.resize(980, 640)
+    win.resize(1000, 700)
     win.show()
     sys.exit(app.exec())

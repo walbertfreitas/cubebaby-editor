@@ -88,6 +88,7 @@ do CubeSuite ou por medição:
 | Alterar todos os controles **ao vivo** (ouve na hora) | ✅ |
 | Ligar/desligar cada seção (IR, Ambiente, Tonalidade) | ✅ |
 | Interface em **português e inglês** (troque quando quiser, no canto inferior direito) | ✅ |
+| Visual minimalista em preto e branco; a barra de título segue o tema do sistema | ✅ |
 | Salvar os presets no pedal (com conferência) | ✅ |
 | Voltar os presets aos valores de fábrica | ✅ |
 | USB Loopback (ligar/desligar, mostra o estado real) | ✅ |
@@ -199,9 +200,9 @@ arecord -D plughw:2,0 -f S16_LE -r 48000 -c 1 -d 5 teste.wav && aplay teste.wav
 | **COMP** | 0–8 | **Compressor.** Iguala notas fortes e fracas; quanto maior, mais uniforme (e menos dinâmico). |
 | **BASS / MID / TREB** | 0–127 | Equalizador: graves, médios e agudos. |
 
-### Botões de seção
+### Chaves de seção
 
-Ligam/desligam uma seção inteira sem perder os ajustes dela:
+As chaves ao lado do nome de cada seção ligam/desligam a seção inteira sem perder os ajustes dela:
 
 - **IR** → controla o IR CAB
 - **Ambiente** → TIME, SPACE e MOD
@@ -300,6 +301,7 @@ fazer a atualização com o CubeSuite oficial (no Windows ou no Wine).
 | `apt` diz que `python3-pyqt6` não existe | Seu sistema é antigo demais para o `.deb` (ex.: Ubuntu 22.04). Use [a instalação pelo código](#instalar-a-partir-do-código-outras-distribuições). |
 | "Modelo não suportado (id 0x…)" | Seu pedal não é um Cube Baby AC. O programa não arrisca gravar nele. Veja [Como contribuir](#como-contribuir). |
 | "A verificação falhou" ao gravar | Nada foi perdido: o backup do que estava no slot foi feito antes. Tente de novo; se repetir, troque o cabo/porta USB. |
+| Janela borrada com escala fracionada (ex.: 125%) | No Wayland o programa roda pelo XWayland para que o sistema desenhe a barra de título. Abra com `QT_QPA_PLATFORM=wayland cubebaby-editor` (janela nítida, mas com a barra de título do próprio Qt). |
 | O som do IR ficou estranho | Teste com as opções "Converter para 48 kHz" e "Fase mínima" ligadas/desligadas e outro valor de Distance. |
 
 Para ver mensagens detalhadas, abra pelo terminal: `cubebaby-editor`.
